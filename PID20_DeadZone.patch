@@ -1,0 +1,44 @@
+Index: fhem/FHEM/98_PID20.pm
+===================================================================
+--- fhem/FHEM/98_PID20.pm	(revision 9735)
++++ fhem/FHEM/98_PID20.pm	(working copy)
+@@ -89,6 +89,7 @@
+     . "pidActorKeepAlive "
+     . "pidActorLimitLower "
+     . "pidActorLimitUpper "
++    . "pidActorDeadZoneLower "
+     . "pidCalcInterval "
+     . "pidDeltaTreshold "
+     . "pidDesiredName "
+@@ -288,7 +289,8 @@
+       $ret .= 'Factor I         : ' . $hash->{helper}{factor_I} . "\n";
+       $ret .= 'Factor D         : ' . $hash->{helper}{factor_D} . "\n\n";
+       $ret .= 'Actor lower limit: ' . $hash->{helper}{actorLimitLower} . "\n";
+-      $ret .= 'Actor upper limit: ' . $hash->{helper}{actorLimitUpper} . "\n";
++      $ret .= 'Actor upper limit: ' . $hash->{helper}{actorLimitUpper} . "\n\n";
++      $ret .= 'Actor lower dead zone: ' . $hash->{helper}{actorDeadZoneLower} . "\n";
+       return $ret;
+     }
+     default { return $usage; }
+@@ -438,6 +440,8 @@
+     my $actorLimitLower = $hash->{helper}{actorLimitLower};
+     $hash->{helper}{actorLimitUpper} = ( AttrVal( $name, 'pidActorLimitUpper', 100 ) =~ m/$reFloat/ ) ? $1 : 100;
+     my $actorLimitUpper = $hash->{helper}{actorLimitUpper};
++    $hash->{helper}{actorDeadZoneLower} = ( AttrVal( $name, 'pidActorDeadZoneLower', 0 ) =~ m/$reFloat/ ) ? $1 : 0;
++    my $actorDeadZoneLower = $hash->{helper}{actorDeadZoneLower};
+     $hash->{helper}{factor_P} = ( AttrVal( $name, 'pidFactor_P', 25 ) =~ m/$reFloatpos/ )   ? $1 : 25;
+     $hash->{helper}{factor_I} = ( AttrVal( $name, 'pidFactor_I', 0.25 ) =~ m/$reFloatpos/ ) ? $1 : 0.25;
+     $hash->{helper}{factor_D} = ( AttrVal( $name, 'pidFactor_D', 0 ) =~ m/$reFloatpos/ )    ? $1 : 0;
+@@ -533,6 +537,12 @@
+ 
+       # calc actuation
+       $actuationCalc = $pPortion + $iPortion + $dPortion;
++      
++      # add dead zone offset
++      if ($actuationCalc > 0.1)
++      {
++	$actuationCalc = $actuationCalc + $actorDeadZoneLower;
++      }
+ 
+       PID20_Log $hash, 2, "P1 delta:" . sprintf( "%.2f", $delta ) . " isWindup:$isWindup" if ($DEBUG_Calc);
+ 
