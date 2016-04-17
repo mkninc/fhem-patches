@@ -1,16 +1,16 @@
 Index: fhem/FHEM/98_PID20.pm
 ===================================================================
---- fhem/FHEM/98_PID20.pm	(revision 9735)
+--- fhem/FHEM/98_PID20.pm	(revision 11268)
 +++ fhem/FHEM/98_PID20.pm	(working copy)
-@@ -89,6 +89,7 @@
-     . "pidActorKeepAlive "
-     . "pidActorLimitLower "
-     . "pidActorLimitUpper "
-+    . "pidActorDeadZoneLower "
-     . "pidCalcInterval "
-     . "pidDeltaTreshold "
-     . "pidDesiredName "
-@@ -288,7 +289,8 @@
+@@ -102,6 +102,7 @@
+     . 'pidActorKeepAlive '
+     . 'pidActorLimitLower '
+     . 'pidActorLimitUpper '
++    . 'pidActorDeadZoneLower '
+     . 'pidActorCallBeforeSetting '
+     . 'pidIPortionCallBeforeSetting '
+     . 'pidCalcInterval '
+@@ -316,7 +317,8 @@
        $ret .= 'Factor I         : ' . $hash->{helper}{factor_I} . "\n";
        $ret .= 'Factor D         : ' . $hash->{helper}{factor_D} . "\n\n";
        $ret .= 'Actor lower limit: ' . $hash->{helper}{actorLimitLower} . "\n";
@@ -20,7 +20,7 @@ Index: fhem/FHEM/98_PID20.pm
        return $ret;
      }
      default { return $usage; }
-@@ -438,6 +440,8 @@
+@@ -468,6 +470,8 @@
      my $actorLimitLower = $hash->{helper}{actorLimitLower};
      $hash->{helper}{actorLimitUpper} = ( AttrVal( $name, 'pidActorLimitUpper', 100 ) =~ m/$reFloat/ ) ? $1 : 100;
      my $actorLimitUpper = $hash->{helper}{actorLimitUpper};
@@ -29,7 +29,7 @@ Index: fhem/FHEM/98_PID20.pm
      $hash->{helper}{factor_P} = ( AttrVal( $name, 'pidFactor_P', 25 ) =~ m/$reFloatpos/ )   ? $1 : 25;
      $hash->{helper}{factor_I} = ( AttrVal( $name, 'pidFactor_I', 0.25 ) =~ m/$reFloatpos/ ) ? $1 : 0.25;
      $hash->{helper}{factor_D} = ( AttrVal( $name, 'pidFactor_D', 0 ) =~ m/$reFloatpos/ )    ? $1 : 0;
-@@ -533,6 +537,12 @@
+@@ -574,6 +578,12 @@
  
        # calc actuation
        $actuationCalc = $pPortion + $iPortion + $dPortion;
@@ -40,5 +40,5 @@ Index: fhem/FHEM/98_PID20.pm
 +	$actuationCalc = $actuationCalc + $actorDeadZoneLower;
 +      }
  
-       PID20_Log $hash, 2, "P1 delta:" . sprintf( "%.2f", $delta ) . " isWindup:$isWindup" if ($DEBUG_Calc);
+       PID20_Log $hash, 2, 'P1 delta:' . sprintf( "%.2f", $delta ) . " isWindup:$isWindup" if ($DEBUG_Calc);
  
